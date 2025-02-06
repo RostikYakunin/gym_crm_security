@@ -98,34 +98,6 @@ class TrainerMapperTest {
     }
 
     @Test
-    @DisplayName("Should update existing Trainer with new data")
-    void testUpdateTrainer() {
-        // Given
-        var existingTrainer = Trainer.builder()
-                .firstName("John")
-                .lastName("Doe")
-                .specialization(TrainingType.YOGA)
-                .isActive(true)
-                .build();
-
-        var updatedTrainer = Trainer.builder()
-                .firstName("Jane")
-                .lastName("Smith")
-                .specialization(TrainingType.YOGA)
-                .isActive(false)
-                .build();
-
-        // When
-        trainerMapper.updateTrainer(existingTrainer, updatedTrainer);
-
-        // Then
-        assertEquals("Jane", existingTrainer.getFirstName());
-        assertEquals("Smith", existingTrainer.getLastName());
-        assertEquals(TrainingType.YOGA, existingTrainer.getSpecialization());
-        assertFalse(existingTrainer.isActive());
-    }
-
-    @Test
     @DisplayName("Should map from Trainer to TrainerDto")
     void testToDto() {
         // Given

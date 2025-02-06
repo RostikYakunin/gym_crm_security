@@ -3,7 +3,6 @@ package com.crm.utils;
 import com.crm.repositories.entities.User;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.function.Function;
 
@@ -29,15 +28,5 @@ public class UserUtils {
         }
 
         return uniqueUsername;
-    }
-
-    public static String hashPassword(String password) {
-        log.info("Started hashing password... ");
-        return BCrypt.hashpw(password, BCrypt.gensalt());
-    }
-
-    public static boolean matchesPasswordHash(String inputtedPassword, String passwordHash) {
-        log.info("Started checking password and hash... ");
-        return BCrypt.checkpw(inputtedPassword, passwordHash);
     }
 }

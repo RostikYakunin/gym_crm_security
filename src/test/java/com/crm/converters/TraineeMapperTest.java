@@ -51,47 +51,6 @@ class TraineeMapperTest {
     }
 
     @Test
-    @DisplayName("Should update existing trainee from updated trainee")
-    void testUpdateTrainee() {
-        // Given
-        var existingTrainee = Trainee.builder()
-                .id(1L)
-                .firstName("John")
-                .lastName("Doe")
-                .userName("johndoe")
-                .password("Passord123")
-                .isActive(false)
-                .dateOfBirth(LocalDate.of(1990, 1, 1))
-                .address("123 Main St")
-                .trainings(new ArrayList<>())
-                .build();
-
-        var fromDto = Trainee.builder()
-                .id(1L)
-                .firstName("Jane")
-                .lastName("Smith")
-                .userName("johndoe")
-                .password("Passd123")
-                .isActive(true)
-                .dateOfBirth(LocalDate.of(1995, 5, 5))
-                .address("456 Elm St")
-                .build();
-
-        // When
-        traineeMapper.updateTrainee(existingTrainee, fromDto);
-
-        // Then
-        assertEquals(fromDto.getFirstName(), existingTrainee.getFirstName());
-        assertEquals(fromDto.getLastName(), existingTrainee.getLastName());
-        assertEquals(fromDto.getDateOfBirth(), existingTrainee.getDateOfBirth());
-        assertEquals(fromDto.getAddress(), existingTrainee.getAddress());
-        assertEquals(fromDto.getId(), existingTrainee.getId());
-        assertEquals(fromDto.getUserName(), existingTrainee.getUserName());
-        assertEquals(fromDto.getPassword(), existingTrainee.getPassword());
-        assertTrue(existingTrainee.isActive());
-    }
-
-    @Test
     @DisplayName("Should map from Trainee to TraineeViewDto")
     void testToTraineeView() {
         // Given

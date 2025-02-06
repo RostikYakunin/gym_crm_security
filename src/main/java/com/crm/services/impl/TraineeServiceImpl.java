@@ -18,6 +18,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 public class TraineeServiceImpl implements TraineeService {
     private final TraineeRepo repository;
     private final ConversionService converter;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public Trainee findById(long id) {
@@ -84,7 +86,7 @@ public class TraineeServiceImpl implements TraineeService {
         );
 
         entity.setUserName(uniqueUsername);
-        entity.setPassword(UserUtils.hashPassword(entity.getPassword()));
+        entity.setPassword(passwordEncoder.encode(entity.getPassword()));
         entity.setActive(true);
 
         var trainee = repository.save(entity);
@@ -143,7 +145,7 @@ public class TraineeServiceImpl implements TraineeService {
     public boolean isUsernameAndPasswordMatching(String username, String inputtedPassword) {
         log.info("Started verification for user name and password matching...");
         return repository.findByUserName(username)
-                .map(user -> UserUtils.matchesPasswordHash(inputtedPassword, user.getPassword()))
+                .map(user -> passwordEncoder.matches(inputtedPassword, user.getPassword()))
                 .orElse(false);
     }
 
@@ -168,14 +170,14 @@ public class TraineeServiceImpl implements TraineeService {
         log.info("Started changing password for trainee...");
         var foundTrainee = findByUsernameOrThrow(loginDto.getUserName());
 
-        var result = UserUtils.matchesPasswordHash(loginDto.getOldPassword(), foundTrainee.getPassword());
+        var result = passwordEncoder.matches(loginDto.getOldPassword(), foundTrainee.getPassword());
         if (!result) {
             log.error("Inputted password does not match password from DB");
             throw new PasswordNotMatchException();
         }
 
         log.info("Changing password for trainee...");
-        foundTrainee.setPassword(UserUtils.hashPassword(loginDto.getNewPassword()));
+        foundTrainee.setPassword(passwordEncoder.encode(loginDto.getNewPassword()));
         repository.save(foundTrainee);
     }
 
