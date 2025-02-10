@@ -27,12 +27,13 @@ public class TrainingServiceImpl implements TrainingService {
 
     @Override
     public Training save(Training training) {
-        log.info("Started saving training");
+        log.info("Started saving training...");
         return trainingRepo.save(training);
     }
 
     @Override
     public TrainingView addTraining(TrainingDto trainingDto) {
+        log.info("Saving new training`s profile...");
         var fromDto = convertor.convert(trainingDto, Training.class);
         return convertor.convert(trainingRepo.save(fromDto), TrainingView.class);
     }
