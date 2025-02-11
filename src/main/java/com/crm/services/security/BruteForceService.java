@@ -28,19 +28,20 @@ public class BruteForceService {
         if (attempt.count >= maxAttempts) {
             log.info("User with username:" + username + " has 3 failed login`s attempt and was blocked");
             attempt.lockedUntil = Instant.now().plusMillis(lockedTime * 60_000);
+            return;
         }
 
         attempts.put(username, attempt);
     }
 
-    public boolean isBlocked(String username) {
+    public boolean isUserBlocked(String username) {
         log.info("Verifying if user is blocked...");
         var attempt = attempts.get(username);
         return attempt != null && attempt.lockedUntil != null && Instant.now().isBefore(attempt.lockedUntil);
     }
 
     public void loginSucceeded(String username) {
-        log.info("Login is successful all unsuccessful attempts were deleted...");
+        log.info("Login was successful, all unsuccessful attempts were deleted...");
         attempts.remove(username);
     }
 

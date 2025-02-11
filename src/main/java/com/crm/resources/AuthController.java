@@ -1,21 +1,16 @@
 package com.crm.resources;
 
-import com.crm.exceptions.UserBlockedException;
 import com.crm.models.AuthRequest;
 import com.crm.models.Token;
-import com.crm.services.security.BruteForceService;
-import com.crm.services.security.CustomUserDetailsService;
-import com.crm.services.security.JwtService;
+import com.crm.services.security.GymSecurityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,10 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Tag(name = "REST API for authentication", description = "Provides resource methods for authentication")
 public class AuthController {
-    private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
-    private final CustomUserDetailsService userDetailsService;
-    private final BruteForceService bruteForceService;
+    private final GymSecurityService securityService;
 
     @Operation(
             summary = "Login for already registered users",
@@ -42,27 +34,9 @@ public class AuthController {
             }
     )
     @PostMapping("/login")
-    public ResponseEntity<Token> login(@RequestBody AuthRequest request) {
-        if (bruteForceService.isBlocked(request.getUsername())) {
-            throw new UserBlockedException("User is temporarily blocked. Try again later.");
-        }
-
-        authentication(request);
-
-        bruteForceService.loginSucceeded(request.getUsername());
-        var userDetails = userDetailsService.loadUserByUsername(request.getUsername());
-        return ResponseEntity.status(HttpStatus.CREATED).body(jwtService.generateToken(userDetails));
-    }
-
-    private void authentication(AuthRequest request) {
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-            );
-        } catch (Exception e) {
-            bruteForceService.loginFailed(request.getUsername());
-            throw new BadCredentialsException("Invalid credentials");
-        }
+    public ResponseEntity<Token> login(@RequestBody @Valid AuthRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(securityService.login(request));
     }
 
     @Operation(
@@ -80,12 +54,6 @@ public class AuthController {
     )
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            var token = authHeader.substring(7);
-            bruteForceService.logout(token);
-            return ResponseEntity.ok("Logged out successfully");
-        }
-
-        throw new BadCredentialsException("Invalid credentials");
+        return ResponseEntity.ok(securityService.logout(authHeader));
     }
 }

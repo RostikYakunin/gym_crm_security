@@ -41,7 +41,7 @@ public class JwtService {
         var stingToken = Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(issuedAt)
-                .setExpiration(issuedAt)
+                .setExpiration(expiredAt)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 

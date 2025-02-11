@@ -13,7 +13,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-public class TokenBlockedFilter extends OncePerRequestFilter {
+public class TokenFilter extends OncePerRequestFilter {
     private final BruteForceService bruteForceService;
 
     @Override
