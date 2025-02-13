@@ -31,11 +31,11 @@ spring:
       indent_output: true
   security:
     jwt:
-      secret-key: 70337336763979244226452948404D635166546A576E5A7134743777217A2543
+      secret-key: ${SECRET_KEY}
       expiration-minutes: 60
     brute-force:
       attempts: 3
-      locked_time_minutes: 5
+      locked-time-minutes: 5
 
 logging:
   level:

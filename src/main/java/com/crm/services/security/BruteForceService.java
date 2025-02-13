@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BruteForceService {
     @Value("${spring.security.brute-force.attempts}")
     private int maxAttempts;
-    @Value("${spring.security.brute-force.locked_time_minutes}")
+    @Value("${spring.security.brute-force.locked-time-minutes}")
     private long lockedTime;
     private final Map<String, FailedLoginAttempt> attempts = new ConcurrentHashMap<>();
     private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
@@ -27,8 +28,7 @@ public class BruteForceService {
 
         if (attempt.count >= maxAttempts) {
             log.info("User with username:" + username + " has 3 failed login`s attempt and was blocked");
-            attempt.lockedUntil = Instant.now().plusMillis(lockedTime * 60_000);
-            return;
+            attempt.lockedUntil = Instant.now().plus(lockedTime, ChronoUnit.MINUTES);
         }
 
         attempts.put(username, attempt);

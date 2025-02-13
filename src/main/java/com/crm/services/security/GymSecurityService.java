@@ -35,7 +35,7 @@ public class GymSecurityService {
     public Token login(AuthRequest request) {
         log.info("Starting logging in...");
         if (bruteForceService.isUserBlocked(request.getUsername())) {
-            log.error("User is temporarily blocked!");
+            log.info("User is temporarily blocked!");
             throw new UserBlockedException("User is temporarily blocked. Try again later.");
         }
 
