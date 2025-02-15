@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class UserUtilsTest {
     private Trainee testUser;
@@ -63,48 +63,5 @@ class UserUtilsTest {
 
         // Then
         assertEquals("John.Doe3", result);
-    }
-
-    @Test
-    @DisplayName("Hash password should generate a non-empty and different hash")
-    void hashPassword_ShouldGenerateValidHash() {
-        // Given
-        var password = "SecurePassword123";
-
-        // When
-        var hashedPassword = UserUtils.hashPassword(password);
-
-        // Then
-        assertNotNull(hashedPassword);
-        assertNotEquals(hashedPassword, password);
-    }
-
-    @Test
-    @DisplayName("Matches password should return true for correct password")
-    void matchesPasswordHash_ShouldReturnTrueForCorrectPassword() {
-        // Given
-        var password = "SecurePassword123";
-        var hashedPassword = UserUtils.hashPassword(password);
-
-        // When
-        var result = UserUtils.matchesPasswordHash(password, hashedPassword);
-
-        // Then
-        assertTrue(result);
-    }
-
-    @Test
-    @DisplayName("Matches password should return false for incorrect password")
-    void matchesPasswordHash_ShouldReturnFalseForIncorrectPassword() {
-        // Given
-        var password = "SecurePassword123";
-        var hashedPassword = UserUtils.hashPassword(password);
-        var wrongPassword = "WrongPassword456";
-
-        // When
-        var result = UserUtils.matchesPasswordHash(wrongPassword, hashedPassword);
-
-        // Then
-        assertFalse(result);
     }
 }

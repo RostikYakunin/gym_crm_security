@@ -11,17 +11,18 @@ import com.crm.exceptions.UserNameChangedException;
 import com.crm.repositories.TrainerRepo;
 import com.crm.repositories.entities.Trainer;
 import com.crm.repositories.entities.Training;
-import com.crm.utils.UserUtils;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mindrot.jbcrypt.BCrypt;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -36,6 +37,8 @@ class TrainerServiceImplTest extends UnitTestBase {
     private TrainerRepo trainerRepo;
     @Mock
     private ConversionService conversionService;
+    @Mock
+    private PasswordEncoder encoder;
 
     @Captor
     ArgumentCaptor<String> stringArgumentCaptor;
@@ -62,7 +65,7 @@ class TrainerServiceImplTest extends UnitTestBase {
     void save_ShouldGenerateUsernameAndPasswordAndSaveTrainer() {
         // Given
         String expectedUserName = "testName1.testLastName1";
-
+        when(encoder.encode(anyString())).thenReturn("");
         when(trainerRepo.save(any(Trainer.class))).thenReturn(testTrainer);
 
         // When
@@ -135,7 +138,10 @@ class TrainerServiceImplTest extends UnitTestBase {
         // Given
         when(trainerRepo.findByUserName(anyString())).thenReturn(Optional.ofNullable(testTrainer));
         when(trainerRepo.save(any(Trainer.class))).thenReturn(testTrainer);
-        testTrainer.setPassword(UserUtils.hashPassword(testTrainer.getPassword()));
+        when(encoder.matches(anyString(), anyString()))
+                .thenReturn(false)
+                .thenReturn(true);
+        testTrainer.setPassword(BCrypt.hashpw(testTrainer.getPassword(), BCrypt.gensalt()));
 
         // When - Then
         assertThrows(
@@ -177,11 +183,15 @@ class TrainerServiceImplTest extends UnitTestBase {
     @DisplayName("Is username and password matching - should return true/false for matching credentials")
     void isUsernameAndPasswordMatching_ShouldReturnTrueForMatchingCredentials() {
         // Given
-        testTrainer.setPassword(UserUtils.hashPassword(testTrainer.getPassword()));
+        testTrainer.setPassword(BCrypt.hashpw(testTrainer.getPassword(), BCrypt.gensalt()));
         when(trainerRepo.findByUserName(anyString()))
                 .thenReturn(Optional.of(testTrainer))
                 .thenReturn(Optional.of(testTrainer))
                 .thenReturn(Optional.empty());
+        when(encoder.matches(anyString(), anyString()))
+                .thenReturn(true)
+                .thenReturn(false)
+                .thenReturn(false);
 
         // When
         var result1 = trainerService.isUsernameAndPasswordMatching(testTrainer.getUserName(), "Pasw3456");
@@ -283,7 +293,7 @@ class TrainerServiceImplTest extends UnitTestBase {
         when(conversionService.convert(any(TrainerDto.class), eq(Trainer.class))).thenReturn(testTrainer);
         when(trainerRepo.save(any(Trainer.class))).thenReturn(testTrainer);
         when(conversionService.convert(any(Trainer.class), eq(TrainerDto.class))).thenReturn(trainerDto);
-
+        when(encoder.encode(anyString())).thenReturn("");
         // When
         var result = trainerService.addTrainer(new TrainerDto());
 
