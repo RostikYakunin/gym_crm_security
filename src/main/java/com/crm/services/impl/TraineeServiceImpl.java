@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Optional;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -200,10 +200,10 @@ public class TraineeServiceImpl implements TraineeService {
             throw new UserNameChangedException();
         }
 
-        var fromDto = converter.convert(updateDto, Trainee.class);
-        fromDto.setId(id);
+        var updateTrainee = converter.convert(updateDto, Trainee.class);
+        updateTrainee.setId(id);
 
-        return converter.convert(update(fromDto), TraineeView.class);
+        return converter.convert(update(updateTrainee), TraineeView.class);
     }
 
     @Override
@@ -212,22 +212,12 @@ public class TraineeServiceImpl implements TraineeService {
         var foundTrainee = findByUsernameOrThrow(updateDto.getUserName());
 
         var updatedTrainings = updateDto.getTrainings().stream()
-                .map(trainingDto -> {
-                            var trainingId = trainingDto.getId();
-                            if (trainingId == null) {
-                                return converter.convert(trainingDto, Training.class);
-                            }
-
-                            return Optional.ofNullable(trainingService.findById(trainingId))
-                                    .map(t -> trainingService.save(converter.convert(trainingDto, Training.class)))
-                                    .orElseThrow(() -> new EntityNotFoundException("Training with ID=" + trainingId + " not found"));
-                        }
-                )
-                .collect(Collectors.toSet());
+                .map(trainingDto -> converter.convert(trainingDto, Training.class))
+                .collect(Collectors.toList());
 
         deleteUnnecessaryTrainings(foundTrainee, updatedTrainings);
 
-        foundTrainee.setTrainings(new ArrayList<>(updatedTrainings));
+        foundTrainee.setTrainings(updatedTrainings);
         return repository.save(foundTrainee)
                 .getTrainings()
                 .stream()
@@ -235,7 +225,7 @@ public class TraineeServiceImpl implements TraineeService {
                 .collect(Collectors.toSet());
     }
 
-    private void deleteUnnecessaryTrainings(Trainee foundTrainee, Set<Training> updatedTrainings) {
+    private void deleteUnnecessaryTrainings(Trainee foundTrainee, List<Training> updatedTrainings) {
         foundTrainee.getTrainings().stream()
                 .filter(training -> !updatedTrainings.contains(training))
                 .forEach(trainingService::delete);
