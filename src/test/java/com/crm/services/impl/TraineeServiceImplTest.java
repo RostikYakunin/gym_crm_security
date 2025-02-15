@@ -13,6 +13,7 @@ import com.crm.exceptions.UserNameChangedException;
 import com.crm.repositories.TraineeRepo;
 import com.crm.repositories.entities.Trainee;
 import com.crm.repositories.entities.Training;
+import com.crm.services.TrainingService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -27,6 +28,7 @@ import org.mockito.Mock;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -42,6 +44,8 @@ class TraineeServiceImplTest extends UnitTestBase {
     private ConversionService conversionService;
     @Mock
     private PasswordEncoder encoder;
+    @Mock
+    private TrainingService trainingService;
     @Captor
     private ArgumentCaptor<String> stringArgumentCaptor;
     @InjectMocks
@@ -373,7 +377,13 @@ class TraineeServiceImplTest extends UnitTestBase {
 
         var testDto = TraineeTrainingUpdateDto.builder()
                 .userName(testTrainee.getUserName())
-                .trainings(List.of(new TrainingDto()))
+                .trainings(List.of(TrainingDto.builder()
+                        .trainee(testTrainee)
+                        .trainer(testTrainer)
+                        .trainingType(TrainingType.RESISTANCE)
+                        .trainingName("Test")
+                        .trainingDuration(Duration.ofMinutes(40))
+                        .build()))
                 .build();
 
         // When
@@ -389,12 +399,18 @@ class TraineeServiceImplTest extends UnitTestBase {
     @DisplayName("updateTraineeTrainings - should throw IllegalArgumentException")
     void updateTraineeTrainings_shouldThrowException() {
         // Given
-        when(conversionService.convert(any(TrainingDto.class), eq(Training.class))).thenReturn(testTraining);
+        when(conversionService.convert(any(TrainingDto.class), eq(Training.class))).thenThrow(IllegalArgumentException.class);
         when(traineeRepo.findByUserName(anyString())).thenReturn(Optional.ofNullable(Trainee.builder().id(2L).build()));
 
         var testDto = TraineeTrainingUpdateDto.builder()
                 .userName(testTrainee.getUserName())
-                .trainings(List.of(new TrainingDto()))
+                .trainings(List.of(TrainingDto.builder()
+                        .trainee(testTrainee)
+                        .trainer(testTrainer)
+                        .trainingType(TrainingType.RESISTANCE)
+                        .trainingName("Test")
+                        .trainingDuration(Duration.ofMinutes(40))
+                        .build()))
                 .build();
 
         // When - Then

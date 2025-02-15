@@ -37,4 +37,9 @@ public class TrainingServiceImpl implements TrainingService {
         var fromDto = convertor.convert(trainingDto, Training.class);
         return convertor.convert(trainingRepo.save(fromDto), TrainingView.class);
     }
+
+    @Override
+    public void delete(Training training) {
+        trainingRepo.delete(training);
+    }
 }

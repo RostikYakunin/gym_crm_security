@@ -12,6 +12,7 @@ import com.crm.repositories.TraineeRepo;
 import com.crm.repositories.entities.Trainee;
 import com.crm.repositories.entities.Training;
 import com.crm.services.TraineeService;
+import com.crm.services.TrainingService;
 import com.crm.utils.UserUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -22,6 +23,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,6 +36,7 @@ public class TraineeServiceImpl implements TraineeService {
     private final TraineeRepo repository;
     private final ConversionService converter;
     private final PasswordEncoder passwordEncoder;
+    private final TrainingService trainingService;
 
     @Override
     public Trainee findById(long id) {
@@ -204,27 +208,36 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public Set<TrainingView> updateTraineeTrainings(TraineeTrainingUpdateDto updateDto) {
-        log.info("Starting updating trainee`s trainings..");
-        var newTrainings = updateDto.getTrainings()
-                .stream()
-                .map(dto -> converter.convert(dto, Training.class))
-                .collect(Collectors.toSet());
-
+        log.info("Starting updating trainee's trainings...");
         var foundTrainee = findByUsernameOrThrow(updateDto.getUserName());
 
-        boolean containsInvalidTrainings = newTrainings
-                .stream()
-                .anyMatch(training -> !training.getTrainee().getId().equals(foundTrainee.getId()));
+        var updatedTrainings = updateDto.getTrainings().stream()
+                .map(trainingDto -> {
+                            var trainingId = trainingDto.getId();
+                            if (trainingId == null) {
+                                return converter.convert(trainingDto, Training.class);
+                            }
 
-        if (containsInvalidTrainings) {
-            throw new IllegalArgumentException("Inputted trainings are not belong to user with id=" + foundTrainee.getId());
-        }
+                            return Optional.ofNullable(trainingService.findById(trainingId))
+                                    .map(t -> trainingService.save(converter.convert(trainingDto, Training.class)))
+                                    .orElseThrow(() -> new EntityNotFoundException("Training with ID=" + trainingId + " not found"));
+                        }
+                )
+                .collect(Collectors.toSet());
 
-        foundTrainee.getTrainings().addAll(newTrainings);
-        return update(foundTrainee)
+        deleteUnnecessaryTrainings(foundTrainee, updatedTrainings);
+
+        foundTrainee.setTrainings(new ArrayList<>(updatedTrainings));
+        return repository.save(foundTrainee)
                 .getTrainings()
                 .stream()
                 .map(training -> converter.convert(training, TrainingView.class))
                 .collect(Collectors.toSet());
+    }
+
+    private void deleteUnnecessaryTrainings(Trainee foundTrainee, Set<Training> updatedTrainings) {
+        foundTrainee.getTrainings().stream()
+                .filter(training -> !updatedTrainings.contains(training))
+                .forEach(trainingService::delete);
     }
 }
