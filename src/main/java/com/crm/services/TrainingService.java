@@ -10,4 +10,6 @@ public interface TrainingService {
     Training save(Training training);
 
     TrainingView addTraining(TrainingDto trainingDto);
+
+    void delete(Training training);
 }

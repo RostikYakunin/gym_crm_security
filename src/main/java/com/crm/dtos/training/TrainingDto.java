@@ -22,6 +22,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class TrainingDto {
+    private Long id;
+
     @NotNull(message = "Trainee is mandatory")
     private Trainee trainee;
 

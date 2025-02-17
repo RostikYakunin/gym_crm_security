@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
         log.warn("[{}] Entity not found: {}", transactionId, ex.getMessage());
 
         return ResponseEntity.ok()
-                .body("Entity was deleted");
+                .body(ex.getMessage());
     }
 
     @ExceptionHandler(BadRequestException.class)
