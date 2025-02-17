@@ -213,21 +213,15 @@ public class TraineeServiceImpl implements TraineeService {
 
         var updatedTrainings = updateDto.getTrainings().stream()
                 .map(trainingDto -> converter.convert(trainingDto, Training.class))
-                .collect(Collectors.toList());
+                .toList();
 
-        deleteUnnecessaryTrainings(foundTrainee, updatedTrainings);
+        foundTrainee.getTrainings().clear();
+        foundTrainee.getTrainings().addAll(updatedTrainings);
 
-        foundTrainee.setTrainings(updatedTrainings);
         return repository.save(foundTrainee)
                 .getTrainings()
                 .stream()
                 .map(training -> converter.convert(training, TrainingView.class))
                 .collect(Collectors.toSet());
-    }
-
-    private void deleteUnnecessaryTrainings(Trainee foundTrainee, List<Training> updatedTrainings) {
-        foundTrainee.getTrainings().stream()
-                .filter(training -> !updatedTrainings.contains(training))
-                .forEach(trainingService::delete);
     }
 }
